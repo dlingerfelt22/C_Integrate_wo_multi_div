@@ -1,85 +1,57 @@
 #include <stdio.h>
-// multiply
-unsigned int
-multiply (unsigned int factor1, unsigned int factor2) 
-{
-  
-int product = 0;
-    while (factor2 > 0)
+
+// Russian Peasant Multiplication (Already efficient, just cleaned up)
+unsigned int multiply(unsigned int a, unsigned int b) {
+    unsigned int res = 0;
+    while (b > 0) {
+        if (b & 1) res += a;
+        a <<= 1;
+        b >>= 1;
+    }
+    return res;
+}
+
+// Optimized Binary Division (O(log N))
+unsigned int divide(unsigned int dividend, unsigned int divisor) {
+    if (divisor == 0) return 0; // Basic error handling
     
-    {
-      
-	// If second number becomes odd, add the first number to result 
-	if (factor2 & 1)
-	
-product = product + factor1;
-      
- 
-	// Double the first number and halve the second number 
-	factor1 = factor1 << 1;
-      
-factor2 = factor2 >> 1;
+    unsigned int quotient = 0;
+    unsigned int temp = 0;
+
+    // Iterate from the most significant bit down to 0
+    for (int i = 31; i >= 0; i--) {
+        // Check if (temp + (divisor << i)) <= dividend safely
+        // We use a long long or a check to prevent overflow during the shift
+        if (((unsigned long long)divisor << i) <= dividend) {
+            dividend -= (divisor << i);
+            quotient |= (1U << i);
+        }
+    }
+    return quotient;
+}
+
+// Linear Interpolation: y2 = y1 + (x2 - x1) * (y3 - y1) / (x3 - x1)
+unsigned int Interpolate(unsigned int x1, unsigned int x2, unsigned int x3,
+                         unsigned int y1, unsigned int y3) {
+    unsigned int dx21 = x2 - x1;
+    unsigned int dx31 = x3 - x1;
+    unsigned int dy31 = (y3 > y1) ? (y3 - y1) : (y1 - y3);
+
+    unsigned int num = multiply(dx21, dy31);
+    unsigned int fraction = divide(num, dx31);
+
+    // Handle both upward and downward slopes
+    return (y3 > y1) ? (y1 + fraction) : (y1 - fraction);
+}
+
+int main() {
+    unsigned int x1 = 100, x2 = 300, x3 = 500;
+    unsigned int y1 = 31415, y3 = 161111;
+
+    unsigned int result = Interpolate(x1, x2, x3, y1, y3);
     
-}
-  
-return product;
+    // Result should be exactly 96263
+    printf("Interpolated value: %u\n", result);
 
-}
-
-
- 
-int
-divide (int dividend, int divisor)
-{
-  int sign = ((dividend < 0) ^ (divisor < 0)) ? -1 : 1;
-    dividend = dividend;
-    divisor = divisor;
-    int quotient = 0;
-while (dividend >= divisor)
-    {
-      
-dividend -= divisor;
-      
-++quotient;
-    
-}
-  
-int mpsignquotient = multiply (sign, quotient);
-  
-return mpsignquotient;
-
-}
-
-
-// Interpolate for y 2 at x2
-  unsigned int
-Interpolate (unsigned int x_1, unsigned int x_2, unsigned int x_3,
-	     unsigned int y_1, unsigned int y_3) 
-{
-  
-unsigned int y_2 = 0;	// initialize y_2 for calc
-  unsigned int dx21 = x_2 - x_1;	//calc delta x_2 to x_1
-  unsigned int dx31 = x_3 - x_1;
-  
-unsigned int dy31 = y_3 - y_1;
-  
-y_2 = divide (multiply (dx21, dy31), (dx31)) + y_1;
-  
-return y_2;
-
-}
-
-
- 
-int
-main () 
-{
-  
-unsigned int x_1 = 100, x_2 = 300, x_3 = 500, y_1 = 31415, y_3 = 161111;
-double integ = Interpolate (x_1, x_2, x_3, y_1, y_3);
-printf ("%d", integ);
-  
- 
-return 0;
-
+    return 0;
 }
